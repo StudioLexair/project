@@ -8,5 +8,6 @@
 
 # Dependencies and generated files
 node_modules/
+dist/
 npm-debug.log*
 .DS_Store
