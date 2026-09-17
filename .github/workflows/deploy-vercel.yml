@@ -1,6 +1,9 @@
 name: Desplegar Nebula Strike en Vercel
 
 on:
+  push:
+    branches:
+      - arena/01a0b0a6-project
   workflow_dispatch:
 
 permissions:
