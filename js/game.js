@@ -15,6 +15,12 @@ import { audio } from './audio.js';
 export const BOUNDS = { x: 13.5, y: 7.5 };
 const SPAWN_Z = -150;
 const PLAYER_RADIUS = 0.95;
+const SECTORS = [
+  { name: 'CINTURÓN ORIÓN', goal: 5, contract: 'LIMPIA LA RUTA COMERCIAL' },
+  { name: 'FRONTERA CYGNUS', goal: 8, contract: 'DEFIENDE LA ESTACIÓN' },
+  { name: 'NEBULOSA CARMESÍ', goal: 10, contract: 'CAZA A LOS CORSARIOS' },
+  { name: 'VACÍO DE TITÁN', goal: 12, contract: 'ROMPE EL BLOQUEO' },
+];
 
 const asteroidMat = new THREE.MeshStandardMaterial({
   color: 0x8d8275, roughness: 0.95, metalness: 0.08, flatShading: true,
@@ -144,7 +150,18 @@ export class Game {
     this.onGameOver = null;
     this.onHud = null;
     this.onToast = null;
+    this.onTarget = null;
     this._seed = 1;
+    this.aimPoint = new THREE.Vector3(0, 0, -100);
+    this._aimNdc = new THREE.Vector2(0, 0);
+    this.lockedEnemy = null;
+    this.sector = 0;
+    this.missionKills = 0;
+    this.level = 1;
+    this.xp = 0;
+    this.nextXp = 400;
+    this.maxShield = 100;
+    this.weaponDamage = 1;
 
     this.px = 0; this.py = 0;
     this.tx = 0; this.ty = 0;
@@ -183,18 +200,26 @@ export class Game {
     this.px = 0; this.py = 0;
     this.tx = 0; this.ty = 0;
     this.vx = 0; this.vy = 0;
-    this.shield = 100;
+    this.maxShield = 100;
+    this.shield = this.maxShield;
     this.lives = 3;
     this.invuln = 0;
     this.score = 0;
     this.elapsed = 0;
+    this.sector = 0;
+    this.missionKills = 0;
+    this.level = 1;
+    this.xp = 0;
+    this.nextXp = 400;
+    this.weaponDamage = 1;
+    this.lockedEnemy = null;
     this.streak = 0;
     this.streakT = 0;
     this.rapid = 0;
     this.double = 0;
     this.fireCd = 0;
     this.astT = 0.5;
-    this.enT = 5;
+    this.enT = 2.5;
     this.pwT = 9;
     this.camShake = 0;
     this._goFired = false;
@@ -237,10 +262,8 @@ export class Game {
         this.tx += k.x * 40 * dt;
         this.ty += k.y * 36 * dt;
       }
-      if (!input.dragging && input.dragDX === 0 && input.dragDY === 0 && input.mouse.has) {
-        this.tx = input.mouse.x * BOUNDS.x * 1.06;
-        this.ty = input.mouse.y * BOUNDS.y * 1.06;
-      }
+      // En PC el ratón queda libre para apuntar; WASD/flechas pilotan la nave.
+      // En móvil el gesto de arrastre conserva el control directo de vuelo.
       if (input.dragDX !== 0 || input.dragDY !== 0) {
         const kx = (BOUNDS.x * 2.4) / window.innerWidth;
         const ky = (BOUNDS.y * 2.4) / window.innerHeight;
@@ -277,6 +300,9 @@ export class Game {
       }
     }
 
+    /* ---------- sistema de mira / fijación ---------- */
+    if (this.state === 'playing') this.updateAim(input);
+
     /* ---------- disparo del jugador ---------- */
     if (this.state === 'playing') {
       this.fireCd -= dt;
@@ -286,7 +312,7 @@ export class Game {
       if (this.streakT <= 0) this.streak = 0;
       if (input.fireHeld && this.fireCd <= 0) {
         this.fire();
-        this.fireCd = this.rapid > 0 ? 0.075 : 0.16;
+        this.fireCd = this.rapid > 0 ? 0.07 : Math.max(0.105, 0.16 - (this.level - 1) * 0.008);
         audio.shoot();
       }
     }
@@ -294,13 +320,13 @@ export class Game {
     /* ---------- spawners ---------- */
     if (this.state === 'playing') {
       this.astT -= dt;
-      if (this.astT <= 0 && this.asteroids.length < 38) {
+      if (this.astT <= 0 && this.asteroids.length < 20) {
         this.spawnAsteroid();
         if (Math.random() < THREE.MathUtils.clamp(this.elapsed / 70, 0, 0.55)) this.spawnAsteroid();
-        this.astT = THREE.MathUtils.clamp(1.5 * 42 / this.speed, 0.45, 1.5);
+        this.astT = THREE.MathUtils.clamp(2.15 * 42 / this.speed, 0.8, 2.15);
       }
       this.enT -= dt;
-      if (this.enT <= 0 && this.elapsed > 4) {
+      if (this.enT <= 0 && this.elapsed > 2 && this.enemies.length < 8) {
         this.spawnEnemy();
         if (this.elapsed > 80 && Math.random() < 0.4) this.spawnEnemy();
         this.enT = THREE.MathUtils.clamp(4.6 - this.elapsed * 0.02, 1.5, 4.6);
@@ -357,9 +383,20 @@ export class Game {
     for (let i = this.bullets.length - 1; i >= 0; i--) {
       const b = this.bullets[i];
       b.px = b.x; b.py = b.y; b.pz = b.z;
-      b.z -= 195 * dt;
+      // Una fijación válida guía suavemente el proyectil, como en un caza espacial.
+      if (b.target && this.enemies.includes(b.target)) {
+        const desired = new THREE.Vector3(b.target.x - b.x, b.target.y - b.y, b.target.z - b.z).normalize().multiplyScalar(195);
+        const steer = Math.min(1, dt * 5.5);
+        b.vx += (desired.x - b.vx) * steer;
+        b.vy += (desired.y - b.vy) * steer;
+        b.vz += (desired.z - b.vz) * steer;
+      }
+      b.x += b.vx * dt;
+      b.y += b.vy * dt;
+      b.z += b.vz * dt;
       b.mesh.position.set(b.x, b.y, b.z);
-      if (b.z < SPAWN_Z - 25) {
+      b.mesh.lookAt(b.x + b.vx, b.y + b.vy, b.z + b.vz);
+      if (b.z < SPAWN_Z - 35 || b.z > 35 || Math.abs(b.x) > 100 || Math.abs(b.y) > 70) {
         this.scene.remove(b.mesh);
         disposeObject(b.mesh);
         this.bullets.splice(i, 1);
@@ -390,6 +427,9 @@ export class Game {
         this.powerups.splice(i, 1);
       }
     }
+
+    /* ---------- indicador de objetivo ---------- */
+    if (this.state === 'playing') this.updateTargetHud(input);
 
     /* ---------- colisiones ---------- */
     if (this.state === 'playing') this.collisions();
@@ -422,24 +462,91 @@ export class Game {
       this.onHud({
         score: Math.floor(this.score),
         shield: this.shield,
+        maxShield: this.maxShield,
         lives: this.lives,
         speed: this.speed / 42,
         mult: this.mult,
         rapid: this.rapid,
         double: this.double,
+        sector: this.sector,
+        sectorName: SECTORS[this.sector % SECTORS.length].name,
+        contract: SECTORS[this.sector % SECTORS.length].contract,
+        missionKills: this.missionKills,
+        missionGoal: SECTORS[this.sector % SECTORS.length].goal,
+        level: this.level,
+        xp: this.xp,
+        nextXp: this.nextXp,
       });
     }
   }
 
   /* ================= acciones ================= */
+  updateAim(input) {
+    const mouseAim = input.mouse && input.mouse.has;
+    this._aimNdc.set(mouseAim ? input.mouse.x : 0, mouseAim ? input.mouse.y : 0);
+
+    const probe = new THREE.Vector3(this._aimNdc.x, this._aimNdc.y, 0.2).unproject(this.camera);
+    const direction = probe.sub(this.camera.position).normalize();
+    const distance = (-110 - this.camera.position.z) / (direction.z || -1);
+    this.aimPoint.copy(this.camera.position).addScaledVector(direction, Math.max(10, distance));
+
+    let best = null;
+    let bestD = mouseAim ? 0.18 : 0.52;
+    const projected = new THREE.Vector3();
+    for (const e of this.enemies) {
+      if (e.z > 5) continue;
+      projected.set(e.x, e.y, e.z).project(this.camera);
+      if (projected.z < -1 || projected.z > 1) continue;
+      const dx = projected.x - this._aimNdc.x;
+      const dy = projected.y - this._aimNdc.y;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      if (d < bestD) { bestD = d; best = e; }
+    }
+    this.lockedEnemy = best;
+    for (const e of this.enemies) {
+      const targetScale = e === best ? 1.22 : 1;
+      e.mesh.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.28);
+    }
+    if (best) this.aimPoint.set(best.x, best.y, best.z);
+  }
+
+  updateTargetHud(input) {
+    if (!this.onTarget) return;
+    let target = null;
+    if (this.lockedEnemy && this.enemies.includes(this.lockedEnemy)) {
+      const p = new THREE.Vector3(this.lockedEnemy.x, this.lockedEnemy.y, this.lockedEnemy.z).project(this.camera);
+      target = {
+        x: (p.x * 0.5 + 0.5) * window.innerWidth,
+        y: (-p.y * 0.5 + 0.5) * window.innerHeight,
+        distance: Math.max(0, Math.round(Math.abs(this.lockedEnemy.z))),
+        hp: this.lockedEnemy.hp,
+        maxHp: this.lockedEnemy.maxHp,
+      };
+    }
+    this.onTarget({
+      visible: !!(input.mouse && input.mouse.has),
+      x: input.mouse?.clientX || window.innerWidth * 0.5,
+      y: input.mouse?.clientY || window.innerHeight * 0.5,
+      locked: !!target,
+      target,
+    });
+  }
+
   fire() {
-    const offsets = this.double > 0 ? [-0.45, 0.45] : [0];
+    const offsets = (this.double > 0 || this.level >= 4) ? [-0.45, 0.45] : [0];
     for (const off of offsets) {
+      const x = this.px + off * 1.6, y = this.py - 0.05, z = -1.3;
+      const dir = new THREE.Vector3(this.aimPoint.x - x, this.aimPoint.y - y, this.aimPoint.z - z).normalize();
       const mesh = createPlayerBullet();
-      mesh.position.set(this.px + off * 1.6, this.py - 0.05, -1.3);
+      mesh.position.set(x, y, z);
+      mesh.lookAt(this.aimPoint);
       this.scene.add(mesh);
-      this.bullets.push({ x: this.px + off * 1.6, y: this.py - 0.05, z: -1.3, mesh });
-      this.particles.spawn(this.px + off * 1.6, this.py - 0.05, -1.5, 0x66f2ff, 2, 5, 0.22, 0.5);
+      this.bullets.push({
+        x, y, z, px: x, py: y, pz: z,
+        vx: dir.x * 195, vy: dir.y * 195, vz: dir.z * 195,
+        damage: this.weaponDamage, target: this.lockedEnemy, mesh,
+      });
+      this.particles.spawn(x, y, z - 0.2, 0x66f2ff, 2, 5, 0.22, 0.5);
     }
   }
 
@@ -466,8 +573,10 @@ export class Game {
     const e = createEnemy();
     const x0 = (Math.random() - 0.5) * 2 * BOUNDS.x * 0.7;
     const y0 = (Math.random() - 0.5) * 2 * BOUNDS.y * 0.6;
+    const hp = 1 + Math.floor(this.sector / 2) + (Math.random() < 0.16 ? 1 : 0);
     const ent = {
       x0, y0, x: x0, y: y0, z: SPAWN_Z,
+      hp, maxHp: hp,
       fq: 0.5 + Math.random() * 0.7,
       ph: Math.random() * Math.PI * 2,
       amp: 1.2 + Math.random() * 2.6,
@@ -533,8 +642,11 @@ export class Game {
       if (!hit) {
         for (let j = this.enemies.length - 1; j >= 0; j--) {
           const e = this.enemies[j];
-          if (segSphere(b.px, b.py, b.pz, b.x, b.y, b.z, e.x, e.y, e.z, 0.95)) {
-            this.destroyEnemy(j, true);
+          if (segSphere(b.px, b.py, b.pz, b.x, b.y, b.z, e.x, e.y, e.z, 1.15)) {
+            e.hp -= b.damage || 1;
+            this.particles.spawn(e.x, e.y, e.z, 0xff4055, 8, 8, 0.35);
+            if (e.hp <= 0) this.destroyEnemy(j, true);
+            else audio.hitShield();
             hit = true;
             break;
           }
@@ -598,6 +710,7 @@ export class Game {
     this.asteroids.splice(index, 1);
     if (byBullet) {
       this.scoreAdd(a.score);
+      this.gainXp(Math.max(8, Math.floor(a.score * 0.18)));
       this.addStreak();
       audio.boom(a.r > 2);
       // los grandes se parten
@@ -636,8 +749,11 @@ export class Game {
     this.enemies.splice(index, 1);
     audio.boom(true);
     if (byBullet) {
-      this.scoreAdd(150);
+      this.scoreAdd(150 + this.sector * 35);
       this.addStreak();
+      this.gainXp(120 + this.sector * 20);
+      this.missionKills++;
+      this.checkMission();
       if (Math.random() < 0.18) {
         const dropType = ['shield', 'rapid', 'double'][(Math.random() * 3) | 0];
         const p = createPowerup(dropType);
@@ -653,6 +769,38 @@ export class Game {
     }
   }
 
+  gainXp(amount) {
+    this.xp += amount;
+    while (this.xp >= this.nextXp) {
+      this.xp -= this.nextXp;
+      this.level++;
+      this.nextXp = Math.floor(this.nextXp * 1.38);
+      if (this.level === 3) {
+        this.maxShield = 125;
+        this.shield = this.maxShield;
+      }
+      if (this.level % 3 === 0) this.weaponDamage += 0.5;
+      if (this.onToast) {
+        const unlock = this.level === 3 ? ' · ESCUDO +25' : this.level === 4 ? ' · CAÑÓN DOBLE' : '';
+        this.onToast(`¡NIVEL ${this.level}${unlock}!`);
+      }
+      audio.power();
+    }
+  }
+
+  checkMission() {
+    const mission = SECTORS[this.sector % SECTORS.length];
+    if (this.missionKills < mission.goal) return;
+    this.scoreAdd(1000 + this.sector * 250);
+    this.sector++;
+    this.missionKills = 0;
+    this.shield = Math.min(this.maxShield, this.shield + 45);
+    this.spawnPowerup();
+    const next = SECTORS[this.sector % SECTORS.length];
+    if (this.onToast) this.onToast(`SECTOR LIBERADO · ${next.name}`);
+    audio.power();
+  }
+
   addStreak() {
     this.streak++;
     this.streakT = 2.2;
@@ -665,7 +813,7 @@ export class Game {
   applyPower(p) {
     this.scoreAdd(100);
     audio.power();
-    if (p.type === 'shield') this.shield = Math.min(100, this.shield + 60);
+    if (p.type === 'shield') this.shield = Math.min(this.maxShield, this.shield + 60);
     else if (p.type === 'rapid') this.rapid = 8;
     else if (p.type === 'double') this.double = 8;
     this.particles.spawn(this.px, this.py, 0, p.type === 'shield' ? 0x38b6ff : p.type === 'rapid' ? 0xffa028 : 0x4dff9a, 24, 12, 0.7);
@@ -681,7 +829,7 @@ export class Game {
     this.particles.spawn(this.px, this.py, 0, 0x66ccff, 18, 13, 0.6);
     if (this.shield <= 0) {
       this.lives--;
-      this.shield = 100;
+      this.shield = this.maxShield;
       this.invuln = 2.6;
       this.camShake = 2.6;
       audio.boom(true);

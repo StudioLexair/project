@@ -8,7 +8,7 @@ export class Input {
     this.keys = Object.create(null);
     this.fireHeld = false;
     this.boostHeld = false;
-    this.mouse = { x: 0, y: 0, has: false };
+    this.mouse = { x: 0, y: 0, clientX: 0, clientY: 0, has: false };
     this.dragDX = 0;
     this.dragDY = 0;
     this.dragging = false;
@@ -40,6 +40,8 @@ export class Input {
       if (e.pointerType === 'mouse') {
         this.mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
         this.mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+        this.mouse.clientX = e.clientX;
+        this.mouse.clientY = e.clientY;
         this.mouse.has = true;
       } else if (this.dragging && e.pointerId === this._id) {
         this.dragDX += e.clientX - this._lx;

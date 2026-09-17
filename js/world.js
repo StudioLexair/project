@@ -122,9 +122,10 @@ export function createEnvironment(scene) {
   scene.add(dir);
 
   /* ----- estrellas (3 capas con parallax) ----- */
-  const stars1 = makeStars(1100, 90, 0.85, 0x9fd8ff, 0.9);
-  const stars2 = makeStars(700, 90, 1.5, 0xffffff, 1);
-  const dust = makeStars(450, 70, 0.4, 0x5f7fd4, 0.55);
+  // Fondo deliberadamente limpio: los hostiles y sus disparos deben leerse de inmediato.
+  const stars1 = makeStars(300, 130, 0.48, 0x9fd8ff, 0.62);
+  const stars2 = makeStars(120, 150, 0.78, 0xffffff, 0.72);
+  const dust = makeStars(80, 110, 0.24, 0x5f7fd4, 0.35);
   scene.add(stars1, stars2, dust);
 
   /* ----- nebulosas ----- */
@@ -178,34 +179,33 @@ export function createEnvironment(scene) {
   moon.position.set(60, -20, -380);
   scene.add(planet, ring, ring2, moon);
 
-  /* ----- suelo-rejilla ----- */
+  /* ----- plano de navegación abierto (sin rieles de túnel) ----- */
   const gridTex = makeGridTexture();
   const grid = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 340),
+    new THREE.PlaneGeometry(110, 520),
     new THREE.MeshBasicMaterial({
-      map: gridTex, transparent: true, opacity: 0.3,
+      map: gridTex, transparent: true, opacity: 0.07,
       blending: THREE.AdditiveBlending, depthWrite: false,
     })
   );
   grid.rotation.x = -Math.PI / 2;
-  grid.position.set(0, -9.5, -150);
+  grid.position.set(0, -13, -240);
   scene.add(grid);
 
-  /* ----- rieles laterales ----- */
-  const railMat = new THREE.MeshBasicMaterial({ color: 0x1ec8ff });
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0x1ec8ff, transparent: true, opacity: 0.18,
-    blending: THREE.AdditiveBlending, depthWrite: false,
-  });
-  [-17, 17].forEach((x) => {
-    const rail = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.22, 340), railMat);
-    rail.position.set(x, -9.2, -150);
-    const halo = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 340), glowMat);
-    halo.position.set(x, -9.2, -150);
-    scene.add(rail, halo);
-  });
+  /* Estación orbital: punto reconocible que hace sentir el sector como un lugar. */
+  const station = new THREE.Group();
+  const stationMat = new THREE.MeshStandardMaterial({ color: 0x34465e, metalness: 0.85, roughness: 0.3 });
+  const stationGlow = new THREE.MeshBasicMaterial({ color: 0xffb536, transparent: true, opacity: 0.85 });
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(3, 3, 10, 16), stationMat);
+  hub.rotation.z = Math.PI / 2;
+  const dockRing = new THREE.Mesh(new THREE.TorusGeometry(8, 0.65, 8, 32), stationMat);
+  const beacon = new THREE.Mesh(new THREE.TorusGeometry(8.2, 0.12, 6, 32), stationGlow);
+  station.add(hub, dockRing, beacon);
+  station.position.set(46, 8, -330);
+  station.scale.setScalar(2.2);
+  scene.add(station);
 
-  const CELL = 340 / 16; // unidades por celda de la rejilla
+  const CELL = 520 / 16; // unidades por celda de navegación
 
   function wrapAttr(pts, factor, dt, speed) {
     const pos = pts.geometry.attributes.position;
@@ -222,14 +222,29 @@ export function createEnvironment(scene) {
     pos.needsUpdate = true;
   }
 
+  let activeSector = -1;
+  const sectorColors = [0x04060f, 0x07111a, 0x120713, 0x07130f];
+
   return {
+    setSector(index) {
+      if (index === activeSector) return;
+      activeSector = index;
+      const color = sectorColors[index % sectorColors.length];
+      scene.background.setHex(color);
+      scene.fog.color.setHex(color);
+      station.position.x = index % 2 ? -48 : 46;
+      beacon.material.color.setHex(index % 3 === 0 ? 0xffb536 : index % 3 === 1 ? 0x35d8ff : 0xff4770);
+    },
     update(dt, speed, t) {
-      wrapAttr(stars1, 1.0, dt, speed);
-      wrapAttr(stars2, 1.45, dt, speed);
-      wrapAttr(dust, 0.6, dt, speed);
+      wrapAttr(stars1, 0.24, dt, speed);
+      wrapAttr(stars2, 0.34, dt, speed);
+      wrapAttr(dust, 0.14, dt, speed);
       planet.rotation.y += 0.03 * dt;
       ring.rotation.z += 0.01 * dt;
       moon.rotation.y += 0.1 * dt;
+      station.rotation.z += 0.035 * dt;
+      station.position.z += speed * 0.045 * dt;
+      if (station.position.z > -80) station.position.z = -520;
       gridTex.offset.y += (speed * dt) / CELL;
       nebulas.forEach((n, i) => {
         n.position.x += Math.sin(t * 0.05 + i * 2.1) * 0.02;

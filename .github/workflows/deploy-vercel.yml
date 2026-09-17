@@ -72,7 +72,7 @@ jobs:
 
           grep -q '<title>Nebula Strike 3D</title>' "$workdir/index.html"
           grep -q '"name": "Nebula Strike 3D"' "$workdir/manifest.webmanifest"
-          grep -q "const VERSION = 'nebula-v1'" "$workdir/sw.js"
+          grep -q "const VERSION = 'nebula-v2'" "$workdir/sw.js"
           test "$(wc -c < "$workdir/main.js")" -gt 5000
           test "$(wc -c < "$workdir/three.module.js")" -gt 1000000
           test "$(wc -c < "$workdir/icon.png")" -gt 100000

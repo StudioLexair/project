@@ -49,6 +49,7 @@ const input = {
 
 const dt = 1 / 60;
 let frames = 0;
+let aimedShot = false;
 for (let f = 0; f < 120 * 60; f++) {
   input.mouse.x = Math.sin(f * 0.011) * 0.9 + Math.sin(f * 0.0037) * 0.3;
   input.mouse.y = Math.cos(f * 0.0071) * 0.7;
@@ -57,6 +58,7 @@ for (let f = 0; f < 120 * 60; f++) {
   input.dragDY = (f % 11 === 0) ? -9 : 0;
   game.addDistanceScore(dt);
   game.update(dt, input);
+  if (game.bullets.some((b) => Math.abs(b.vx) > 1 || Math.abs(b.vy) > 1)) aimedShot = true;
   frames++;
   if (game.state === 'gameover') {
     console.log(`Game over en el segundo ${(f / 60).toFixed(1)}`);
@@ -65,7 +67,9 @@ for (let f = 0; f < 120 * 60; f++) {
     break;
   }
 }
+if (!aimedShot) throw new Error('El disparo no siguió la dirección de la mira');
 console.log('frames simuladas:', frames);
+console.log('disparo direccional:', aimedShot ? 'OK' : 'ERROR');
 console.log('score final:', Math.floor(game.score));
 console.log('HUD frames:', hudFrames);
 console.log(

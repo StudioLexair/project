@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#070a1a">
-  <meta name="description" content="Nebula Strike 3D — combate espacial 3D. Pílota tu nave, esquiva asteroides y destruye cazas enemigos.">
+  <meta name="description" content="Nebula Strike 3D — RPG de combate espacial: apunta, fija hostiles, cumple contratos y libera sectores.">
   <title>Nebula Strike 3D</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" href="assets/icons/icon.png">
@@ -17,6 +17,14 @@
 <body>
   <canvas id="scene"></canvas>
   <div id="vignette"></div>
+
+  <!-- Mira libre y fijación de objetivos -->
+  <div id="aim-reticle" class="aim-reticle hidden" aria-hidden="true"><i></i></div>
+  <div id="target-lock" class="target-lock hidden" aria-hidden="true">
+    <span class="lock-corner c1"></span><span class="lock-corner c2"></span>
+    <span class="lock-corner c3"></span><span class="lock-corner c4"></span>
+    <b>▲</b><em id="target-distance">OBJETIVO</em>
+  </div>
 
   <!-- ===================== HUD ===================== -->
   <div id="hud" class="hidden">
@@ -34,6 +42,13 @@
         <div class="hud-label">RÉCORD</div>
         <div id="hud-best" class="hud-value">0</div>
       </div>
+    </div>
+    <div id="mission-panel" class="mission-panel">
+      <div class="mission-kicker">MISIÓN ACTIVA</div>
+      <div id="hud-sector" class="mission-sector">CINTURÓN ORIÓN</div>
+      <div id="hud-mission" class="mission-objective">ELIMINA HOSTILES · 0/5</div>
+      <div class="mission-track"><i id="hud-mission-fill"></i></div>
+      <div id="hud-level" class="pilot-level">PILOTO NV. 1</div>
     </div>
     <div class="hud-row bottom">
       <div class="hud-left">
@@ -74,8 +89,9 @@
         <button id="btn-music" class="btn">MÚSICA: SÍ</button>
       </div>
       <div class="controls-hint">
-        <p>📱 <b>MÓVIL:</b> arrastra el dedo para pilotar · botones FUEGO y TURBO</p>
-        <p>🖥️ <b>PC:</b> ratón o WASD/flechas · ESPACIO dispara · SHIFT turbo</p>
+        <p>📱 <b>MÓVIL:</b> arrastra para pilotar · FUEGO fija al enemigo cercano · TURBO</p>
+        <p>🖥️ <b>PC:</b> WASD/flechas pilotan · mueve el ratón para apuntar · clic/ESPACIO dispara</p>
+        <p>🎯 Completa contratos, sube de nivel y conquista nuevos sectores.</p>
       </div>
     </div>
   </div>

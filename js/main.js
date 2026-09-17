@@ -39,6 +39,10 @@ const hud = {
   shieldEl: $('hud-shield'),
   livesEl: $('hud-lives'),
   powersEl: $('hud-powers'),
+  sectorEl: $('hud-sector'),
+  missionEl: $('hud-mission'),
+  missionFillEl: $('hud-mission-fill'),
+  levelEl: $('hud-level'),
   _lives: -1,
   update(d, best) {
     if (this.scoreEl._v !== d.score) {
@@ -51,8 +55,13 @@ const hud = {
     }
     this.speedEl.textContent = d.speed.toFixed(1) + '×';
     const sh = Math.max(0, Math.round(d.shield));
-    this.shieldEl.style.width = sh + '%';
-    this.shieldEl.classList.toggle('low', sh < 35);
+    const shieldPct = Math.min(100, (sh / (d.maxShield || 100)) * 100);
+    this.shieldEl.style.width = shieldPct + '%';
+    this.shieldEl.classList.toggle('low', shieldPct < 35);
+    this.sectorEl.textContent = d.sectorName;
+    this.missionEl.textContent = `${d.contract} · ${d.missionKills}/${d.missionGoal}`;
+    this.missionFillEl.style.width = `${Math.min(100, d.missionKills / d.missionGoal * 100)}%`;
+    this.levelEl.textContent = `PILOTO NV. ${d.level} · XP ${Math.floor(d.xp)}/${d.nextXp}`;
     if (this._lives !== d.lives) {
       this._lives = d.lives;
       let html = '';
@@ -107,6 +116,9 @@ function setClass(el, on) { el.classList.toggle('hidden', !on); }
 
 function showMenu() {
   state = 'menu';
+  document.body.classList.remove('aiming');
+  $('aim-reticle').classList.add('hidden');
+  $('target-lock').classList.add('hidden');
   game.reset(true);
   audio.engine(false);
   setClass(menuEl, true);
@@ -123,6 +135,7 @@ function startGame() {
   audio.click();
   game.start();
   state = 'playing';
+  document.body.classList.add('aiming');
   setClass(menuEl, false);
   setClass(goEl, false);
   setClass(pauseEl, false);
@@ -136,6 +149,9 @@ function startGame() {
 function togglePause() {
   if (state === 'playing') {
     state = 'paused';
+    document.body.classList.remove('aiming');
+    $('aim-reticle').classList.add('hidden');
+    $('target-lock').classList.add('hidden');
     audio.suspend();
     setClass(pauseEl, true);
   } else if (state === 'paused') {
@@ -145,6 +161,7 @@ function togglePause() {
 
 function resume() {
   state = 'playing';
+  document.body.classList.add('aiming');
   audio.resume();
   setClass(pauseEl, false);
 }
@@ -161,8 +178,28 @@ game.onHud = (d) => {
   hud.update(d, best);
 };
 game.onToast = toast;
+game.onTarget = (d) => {
+  const reticle = $('aim-reticle');
+  const lock = $('target-lock');
+  reticle.classList.toggle('hidden', !d.visible || state !== 'playing');
+  if (d.visible) {
+    reticle.style.left = `${d.x}px`;
+    reticle.style.top = `${d.y}px`;
+    reticle.classList.toggle('locked', d.locked);
+  }
+  const showLock = !!d.target && state === 'playing';
+  lock.classList.toggle('hidden', !showLock);
+  if (showLock) {
+    lock.style.left = `${d.target.x}px`;
+    lock.style.top = `${d.target.y}px`;
+    $('target-distance').textContent = `HOSTIL · ${d.target.distance}u · ${Math.ceil(d.target.hp)}/${d.target.maxHp}`;
+  }
+};
 game.onGameOver = (score) => {
   state = 'gameover';
+  document.body.classList.remove('aiming');
+  $('aim-reticle').classList.add('hidden');
+  $('target-lock').classList.add('hidden');
   audio.resume();
   setClass(pauseEl, false);
   localStorage.setItem('nebulaStrikeBest', String(best));
@@ -227,6 +264,7 @@ function frame(now) {
   if (state !== 'paused') {
     game.addDistanceScore(dt);
     game.update(dt, input);
+    env.setSector(game.sector);
     env.update(dt, game.speed, game.t);
   }
   renderer.render(scene, camera);

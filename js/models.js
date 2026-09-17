@@ -151,10 +151,13 @@ export function createEnemy() {
 
   const glow = glowSprite('#ff7744', 0.7);
   glow.position.set(0, -0.02, -0.62);
-  g.add(glow);
+  const threatHalo = glowSprite('#ff1838', 2.5);
+  threatHalo.material.opacity = 0.22;
+  g.add(threatHalo, glow);
 
   function update(t) {
     glow.scale.setScalar(0.7 * (0.8 + 0.25 * Math.sin(t * 30 + g.id)));
+    threatHalo.scale.setScalar(2.35 + Math.sin(t * 5 + g.id) * 0.22);
   }
 
   return { group: g, update };

@@ -2,24 +2,27 @@
 
 Juego 3D de combate espacial para **Android** (y cualquier navegador) construido como
 **aplicación web PWA** con **Three.js**, el framework 3D especializado para la web.
-Pílota tu nave por un corredor estelar, esquiva campos de asteroides, destruye cazas
-enemigos, recoge power-ups y suma combos.
+Explora sectores orbitales, cumple contratos de combate, fija cazas enemigos con la
+mira, mejora el nivel de tu piloto, recoge power-ups y libera la frontera estelar.
 
 ## ▶️ Cómo jugar
 
 | Acción | 📱 Android | 🖥️ PC |
 |---|---|---|
-| Pilotar | Arrastra el dedo por la pantalla | Mueve el ratón o usa `WASD` / flechas |
+| Pilotar | Arrastra el dedo por la pantalla | `WASD` / flechas |
+| Apuntar/fijar | Fijación asistida al hostil cercano | Mueve el ratón sobre el objetivo |
 | Disparar | Botón **FUEGO** (abajo a la derecha) | `ESPACIO` o clic |
 | Turbo | Botón **TURBO** (abajo a la izquierda) | `SHIFT` |
 | Pausa | Botón `❚❚` | `P` o `ESC` |
 
-### Objetivos y puntos
-- 💎 Asteroides: 25 / 50 / 100 pts (los grandes **se parten** en fragmentos)
-- 👾 Cazas enemigos: 150 pts (a veces sueltan power-ups)
-- 🧲 Power-ups: **+Escudo**, **Tiro rápido** y **Disparo doble**
-- 🔥 Combo: mata rápido para multiplicar puntos hasta **×5**
-- ⏱️ La velocidad y la dificultad suben con el tiempo — sobrevive lo que puedas.
+### Contratos, progresión y puntos
+- 🧭 Libera cuatro sectores con identidad propia y contratos de dificultad creciente.
+- 🎯 La mira fija hostiles, muestra distancia/vida y guía suavemente los proyectiles.
+- 🧑‍🚀 Gana XP y niveles: más escudo, cadencia, daño y cañón doble permanente.
+- 💎 Asteroides: 25 / 50 / 100 pts (los grandes **se parten** en fragmentos).
+- 👾 Cazas con resistencia creciente según el sector y recompensas de créditos/XP.
+- 🧲 Power-ups: **+Escudo**, **Tiro rápido** y **Disparo doble**.
+- 🔥 Combo: elimina objetivos rápidamente para multiplicar puntos hasta **×5**.
 
 ## 🧰 Tecnologías (descargadas y empaquetadas en el repo)
 

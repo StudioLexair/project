@@ -136,3 +136,32 @@ body{
 .spinner{width:46px;height:46px;border-radius:50%;border:3px solid rgba(46,230,255,.15);
   border-top-color:var(--neon);animation:spin 1s linear infinite;box-shadow:0 0 18px rgba(46,230,255,.35);}
 @keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---------------- apuntado y misión ---------------- */
+body.aiming #scene{cursor:none;}
+.aim-reticle{position:fixed;z-index:14;width:30px;height:30px;pointer-events:none;
+  transform:translate(-50%,-50%);border:1px solid rgba(120,235,255,.85);border-radius:50%;
+  box-shadow:0 0 10px rgba(46,230,255,.45),inset 0 0 8px rgba(46,230,255,.18);}
+.aim-reticle::before,.aim-reticle::after{content:"";position:absolute;background:#9af5ff;box-shadow:0 0 5px #2ee6ff;}
+.aim-reticle::before{width:40px;height:1px;left:-6px;top:14px;}
+.aim-reticle::after{width:1px;height:40px;left:14px;top:-6px;}
+.aim-reticle i{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;left:12px;top:12px;box-shadow:0 0 8px #2ee6ff;}
+.aim-reticle.locked{border-color:#ff4055;box-shadow:0 0 15px #ff263f;transform:translate(-50%,-50%) scale(.78);}
+.aim-reticle.locked::before,.aim-reticle.locked::after{background:#ff4055;box-shadow:0 0 5px #ff263f;}
+.target-lock{position:fixed;z-index:13;width:78px;height:78px;pointer-events:none;transform:translate(-50%,-50%);
+  filter:drop-shadow(0 0 7px #ff1838);animation:lockPulse .7s ease-in-out infinite alternate;}
+.target-lock b{position:absolute;color:#ff4055;font-size:15px;left:31px;top:-18px;}
+.target-lock em{position:absolute;top:82px;left:50%;transform:translateX(-50%);font:700 8px 'Orbitron';font-style:normal;
+  letter-spacing:1px;color:#ff7788;white-space:nowrap;text-shadow:0 0 6px #ff1838;}
+.lock-corner{position:absolute;width:20px;height:20px;border-color:#ff4055;border-style:solid;}
+.c1{left:0;top:0;border-width:2px 0 0 2px}.c2{right:0;top:0;border-width:2px 2px 0 0}
+.c3{left:0;bottom:0;border-width:0 0 2px 2px}.c4{right:0;bottom:0;border-width:0 2px 2px 0}
+@keyframes lockPulse{to{transform:translate(-50%,-50%) scale(.9);filter:drop-shadow(0 0 13px #ff1838)}}
+.mission-panel{position:fixed;left:calc(14px + env(safe-area-inset-left));top:105px;width:min(270px,42vw);
+  padding:10px 13px;border-left:2px solid #ffb536;background:linear-gradient(90deg,rgba(8,15,34,.82),rgba(8,15,34,0));}
+.mission-kicker{font-size:7px;letter-spacing:3px;color:#ffb536}.mission-sector{font-size:13px;font-weight:900;color:#fff;margin:4px 0;
+  text-shadow:0 0 8px rgba(255,181,54,.5)}.mission-objective{font-size:8px;letter-spacing:1px;color:#9fc8e8;}
+.mission-track{height:3px;background:rgba(255,255,255,.12);margin:7px 0 5px}.mission-track i{display:block;height:100%;width:0;
+  background:#ffb536;box-shadow:0 0 8px #ffb536;transition:width .25s}.pilot-level{font-size:7px;letter-spacing:2px;color:#66e8ff;}
+@media (pointer:coarse){.aim-reticle{display:none!important}.target-lock{width:64px;height:64px}.target-lock em{top:68px}}
+@media (max-width:600px){.mission-panel{top:78px;width:62vw}.mission-sector{font-size:11px}.mission-objective{font-size:7px}}
