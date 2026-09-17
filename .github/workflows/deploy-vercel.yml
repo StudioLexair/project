@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: nebula-strike-vercel-production
@@ -20,14 +21,46 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Descargar el proyecto
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Configurar Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
 
       - name: Desplegar en Vercel
+        id: vercel
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: npx --yes vercel@59.20.0 deploy --prod --yes --token "$VERCEL_TOKEN" --name nebula-strike-3d
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$(npx --yes vercel@59.20.0 deploy --prod --yes --token "$VERCEL_TOKEN" --name nebula-strike-3d 2>&1)"
+          printf '%s\n' "$output"
+          deployment_url="$(printf '%s\n' "$output" | grep -Eo 'https://[^[:space:]]+\.vercel\.app' | tail -1)"
+          test -n "$deployment_url"
+          echo "deployment_url=$deployment_url" >> "$GITHUB_OUTPUT"
+          echo "### 🚀 Producción: [$deployment_url]($deployment_url)" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verificar aplicación y recursos PWA
+        env:
+          DEPLOYMENT_URL: ${{ steps.vercel.outputs.deployment_url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for resource in / /manifest.webmanifest /sw.js /js/main.js /libs/three.module.js /assets/icons/icon.png; do
+            echo "Verificando ${DEPLOYMENT_URL}${resource}"
+            curl --fail --silent --show-error --location --retry 5 --retry-delay 2 \
+              --output /dev/null "${DEPLOYMENT_URL}${resource}"
+          done
+
+      - name: Registrar URL del despliegue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPLOYMENT_URL: ${{ steps.vercel.outputs.deployment_url }}
+        run: |
+          gh api "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state=success \
+            -f target_url="$DEPLOYMENT_URL" \
+            -f description="Nebula Strike 3D desplegado y verificado" \
+            -f context="Vercel / Producción"
