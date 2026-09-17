@@ -164,4 +164,8 @@ body.aiming #scene{cursor:none;}
 .mission-track{height:3px;background:rgba(255,255,255,.12);margin:7px 0 5px}.mission-track i{display:block;height:100%;width:0;
   background:#ffb536;box-shadow:0 0 8px #ffb536;transition:width .25s}.pilot-level{font-size:7px;letter-spacing:2px;color:#66e8ff;}
 @media (pointer:coarse){.aim-reticle{display:none!important}.target-lock{width:64px;height:64px}.target-lock em{top:68px}}
-@media (max-width:600px){.mission-panel{top:78px;width:62vw}.mission-sector{font-size:11px}.mission-objective{font-size:7px}}
+.combat-radar{position:fixed;right:calc(62px + env(safe-area-inset-right));top:82px;width:120px;height:136px;
+  opacity:.9;filter:drop-shadow(0 0 7px rgba(46,230,255,.35))}.combat-radar canvas{width:120px;height:120px}.combat-radar span{
+  display:block;text-align:center;margin-top:-2px;font-size:7px;letter-spacing:2px;color:#5f9fd4}
+@media (max-width:600px){.mission-panel{top:78px;width:58vw}.mission-sector{font-size:11px}.mission-objective{font-size:7px}
+  .combat-radar{right:48px;top:66px;transform:scale(.76);transform-origin:top right}}

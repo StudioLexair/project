@@ -9,13 +9,15 @@ mira, mejora el nivel de tu piloto, recoge power-ups y libera la frontera estela
 
 | Acción | 📱 Android | 🖥️ PC |
 |---|---|---|
-| Pilotar | Arrastra el dedo por la pantalla | `WASD` / flechas |
-| Apuntar/fijar | Fijación asistida al hostil cercano | Mueve el ratón sobre el objetivo |
+| Girar y cambiar rumbo | Arrastra el dedo por la pantalla | Ratón o `WASD` / flechas |
+| Apuntar/fijar | Fijación asistida al hostil cercano | Lleva la mira hacia el objetivo |
 | Disparar | Botón **FUEGO** (abajo a la derecha) | `ESPACIO` o clic |
 | Turbo | Botón **TURBO** (abajo a la izquierda) | `SHIFT` |
 | Pausa | Botón `❚❚` | `P` o `ESC` |
 
 ### Contratos, progresión y puntos
+- 🕹️ Vuelo libre 3D: la nave gira, cambia de rumbo y la cámara persigue su orientación.
+- 📡 Oleadas tácticas desde todos los flancos con radar 360° (incluida la retaguardia).
 - 🧭 Libera cuatro sectores con identidad propia y contratos de dificultad creciente.
 - 🎯 La mira fija hostiles, muestra distancia/vida y guía suavemente los proyectiles.
 - 🧑‍🚀 Gana XP y niveles: más escudo, cadencia, daño y cañón doble permanente.

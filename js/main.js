@@ -43,7 +43,28 @@ const hud = {
   missionEl: $('hud-mission'),
   missionFillEl: $('hud-mission-fill'),
   levelEl: $('hud-level'),
+  radarEl: $('combat-radar'),
   _lives: -1,
+  drawRadar(threats = []) {
+    const c = this.radarEl;
+    const g = c.getContext('2d');
+    const mid = 60;
+    g.clearRect(0, 0, 120, 120);
+    g.strokeStyle = 'rgba(46,230,255,.38)'; g.lineWidth = 1;
+    for (const r of [18, 36, 55]) { g.beginPath(); g.arc(mid, mid, r, 0, Math.PI * 2); g.stroke(); }
+    g.beginPath(); g.moveTo(mid, 5); g.lineTo(mid, 115); g.moveTo(5, mid); g.lineTo(115, mid); g.stroke();
+    g.fillStyle = '#8ff5ff'; g.beginPath(); g.moveTo(mid, 51); g.lineTo(55, 66); g.lineTo(60, 63); g.lineTo(65, 66); g.closePath(); g.fill();
+    for (const t of threats) {
+      const scale = 52 / Math.max(110, t.distance);
+      let x = t.side * scale, y = -t.forward * scale;
+      const len = Math.hypot(x, y);
+      if (len > 52) { x *= 52 / len; y *= 52 / len; }
+      g.fillStyle = t.locked ? '#ffd34d' : t.altitude > 8 ? '#ff7890' : t.altitude < -8 ? '#b62545' : '#ff304d';
+      g.shadowColor = g.fillStyle; g.shadowBlur = t.locked ? 9 : 5;
+      g.beginPath(); g.arc(mid + x, mid + y, t.locked ? 3.8 : 2.6, 0, Math.PI * 2); g.fill();
+    }
+    g.shadowBlur = 0;
+  },
   update(d, best) {
     if (this.scoreEl._v !== d.score) {
       this.scoreEl._v = d.score;
@@ -59,9 +80,10 @@ const hud = {
     this.shieldEl.style.width = shieldPct + '%';
     this.shieldEl.classList.toggle('low', shieldPct < 35);
     this.sectorEl.textContent = d.sectorName;
-    this.missionEl.textContent = `${d.contract} · ${d.missionKills}/${d.missionGoal}`;
+    this.missionEl.textContent = `${d.contract} · ${d.missionKills}/${d.missionGoal} · OLEADA ${d.wave} · RUMBO ${Math.round(d.heading)}°`;
     this.missionFillEl.style.width = `${Math.min(100, d.missionKills / d.missionGoal * 100)}%`;
     this.levelEl.textContent = `PILOTO NV. ${d.level} · XP ${Math.floor(d.xp)}/${d.nextXp}`;
+    this.drawRadar(d.threats);
     if (this._lives !== d.lives) {
       this._lives = d.lives;
       let html = '';
@@ -265,7 +287,7 @@ function frame(now) {
     game.addDistanceScore(dt);
     game.update(dt, input);
     env.setSector(game.sector);
-    env.update(dt, game.speed, game.t);
+    env.update(dt, game.speed, game.t, game.position);
   }
   renderer.render(scene, camera);
 

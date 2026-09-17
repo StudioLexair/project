@@ -3,7 +3,7 @@
    Cachea la app completa para que funcione 100 % sin conexión
    en el navegador de Android, como una app nativa.
    ============================================================ */
-const VERSION = 'nebula-v2';
+const VERSION = 'nebula-v3';
 const CORE = [
   './',
   './index.html',

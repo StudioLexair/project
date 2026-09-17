@@ -50,6 +50,8 @@ const input = {
 const dt = 1 / 60;
 let frames = 0;
 let aimedShot = false;
+let enemyAhead = false;
+let enemyBehind = false;
 for (let f = 0; f < 120 * 60; f++) {
   input.mouse.x = Math.sin(f * 0.011) * 0.9 + Math.sin(f * 0.0037) * 0.3;
   input.mouse.y = Math.cos(f * 0.0071) * 0.7;
@@ -59,6 +61,11 @@ for (let f = 0; f < 120 * 60; f++) {
   game.addDistanceScore(dt);
   game.update(dt, input);
   if (game.bullets.some((b) => Math.abs(b.vx) > 1 || Math.abs(b.vy) > 1)) aimedShot = true;
+  for (const e of game.enemies) {
+    const rel = new THREE.Vector3(e.x, e.y, e.z).sub(game.position);
+    if (rel.dot(game.forward) > 10) enemyAhead = true;
+    if (rel.dot(game.forward) < -10) enemyBehind = true;
+  }
   frames++;
   if (game.state === 'gameover') {
     console.log(`Game over en el segundo ${(f / 60).toFixed(1)}`);
@@ -68,7 +75,11 @@ for (let f = 0; f < 120 * 60; f++) {
   }
 }
 if (!aimedShot) throw new Error('El disparo no siguió la dirección de la mira');
+if (game.distanceTravelled < 500) throw new Error('La nave no recorrió el mundo libre');
+if (!enemyAhead || !enemyBehind) throw new Error('Las oleadas no rodearon al jugador');
 console.log('frames simuladas:', frames);
+console.log('vuelo libre:', Math.round(game.distanceTravelled), 'unidades');
+console.log('oleada 360°:', enemyAhead && enemyBehind ? 'OK' : 'ERROR');
 console.log('disparo direccional:', aimedShot ? 'OK' : 'ERROR');
 console.log('score final:', Math.floor(game.score));
 console.log('HUD frames:', hudFrames);

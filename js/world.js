@@ -38,7 +38,7 @@ function makeStars(count, spread, size, color, opacity) {
   for (let i = 0; i < count; i++) {
     pos[i * 3] = (Math.random() - 0.5) * spread * 2;
     pos[i * 3 + 1] = (Math.random() - 0.5) * spread * 1.25;
-    pos[i * 3 + 2] = -260 + Math.random() * 300;
+    pos[i * 3 + 2] = (Math.random() - 0.5) * spread * 2;
   }
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -207,21 +207,6 @@ export function createEnvironment(scene) {
 
   const CELL = 520 / 16; // unidades por celda de navegación
 
-  function wrapAttr(pts, factor, dt, speed) {
-    const pos = pts.geometry.attributes.position;
-    const arr = pos.array;
-    for (let i = 0; i < pos.count; i++) {
-      let z = arr[i * 3 + 2] + speed * factor * dt;
-      if (z > 40) {
-        z -= 300;
-        arr[i * 3] = (Math.random() - 0.5) * 180;
-        arr[i * 3 + 1] = (Math.random() - 0.5) * 115;
-      }
-      arr[i * 3 + 2] = z;
-    }
-    pos.needsUpdate = true;
-  }
-
   let activeSector = -1;
   const sectorColors = [0x04060f, 0x07111a, 0x120713, 0x07130f];
 
@@ -235,17 +220,18 @@ export function createEnvironment(scene) {
       station.position.x = index % 2 ? -48 : 46;
       beacon.material.color.setHex(index % 3 === 0 ? 0xffb536 : index % 3 === 1 ? 0x35d8ff : 0xff4770);
     },
-    update(dt, speed, t) {
-      wrapAttr(stars1, 0.24, dt, speed);
-      wrapAttr(stars2, 0.34, dt, speed);
-      wrapAttr(dust, 0.14, dt, speed);
+    update(dt, speed, t, playerPosition) {
+      // El cielo rodea siempre al piloto; los planetas y la estación sí permanecen en el mundo.
+      if (playerPosition) {
+        stars1.position.copy(playerPosition);
+        stars2.position.copy(playerPosition);
+        dust.position.copy(playerPosition);
+      }
       planet.rotation.y += 0.03 * dt;
       ring.rotation.z += 0.01 * dt;
       moon.rotation.y += 0.1 * dt;
       station.rotation.z += 0.035 * dt;
-      station.position.z += speed * 0.045 * dt;
-      if (station.position.z > -80) station.position.z = -520;
-      gridTex.offset.y += (speed * dt) / CELL;
+      gridTex.offset.y += (speed * dt) / CELL * 0.08;
       nebulas.forEach((n, i) => {
         n.position.x += Math.sin(t * 0.05 + i * 2.1) * 0.02;
       });
