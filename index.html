@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#070a1a">
+  <meta name="description" content="Nebula Strike 3D — combate espacial 3D. Pílota tu nave, esquiva asteroides y destruye cazas enemigos.">
+  <title>Nebula Strike 3D</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" href="assets/icons/icon.png">
+  <link rel="apple-touch-icon" href="assets/icons/icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div id="vignette"></div>
+
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hidden">
+    <div class="hud-row top">
+      <div class="hud-left">
+        <div class="hud-label">PUNTOS</div>
+        <div id="hud-score" class="hud-value big">0</div>
+        <div id="hud-combo" class="hud-combo hidden">×1</div>
+      </div>
+      <div class="hud-center">
+        <div class="hud-label">VELOCIDAD</div>
+        <div id="hud-speed" class="hud-value">1.0×</div>
+      </div>
+      <div class="hud-right">
+        <div class="hud-label">RÉCORD</div>
+        <div id="hud-best" class="hud-value">0</div>
+      </div>
+    </div>
+    <div class="hud-row bottom">
+      <div class="hud-left">
+        <div class="shield-track"><div id="hud-shield" class="shield-fill"></div></div>
+        <div id="hud-lives" class="lives"></div>
+      </div>
+      <div id="hud-powers" class="hud-powers"></div>
+    </div>
+  </div>
+
+  <!-- ===================== Controles táctiles ===================== -->
+  <button id="btn-fire" class="touch-btn hidden" aria-label="Disparar">
+    <svg viewBox="0 0 48 48" fill="none" stroke="#ff9a82" stroke-width="3" stroke-linecap="round">
+      <circle cx="24" cy="24" r="12"/>
+      <line x1="24" y1="2" x2="24" y2="13"/><line x1="24" y1="35" x2="24" y2="46"/>
+      <line x1="2" y1="24" x2="13" y2="24"/><line x1="35" y1="24" x2="46" y2="24"/>
+    </svg>
+  </button>
+  <button id="btn-boost" class="touch-btn hidden" aria-label="Turbo">
+    <svg viewBox="0 0 48 48" fill="#7dffb0"><path d="M27 3 L10 28 h10 L18 45 L38 18 h-11 Z"/></svg>
+  </button>
+  <button id="btn-pause" class="icon-btn hidden" aria-label="Pausa">❚❚</button>
+  <div id="toast"></div>
+
+  <!-- ===================== Pantallas ===================== -->
+  <div id="loading" class="overlay">
+    <div class="spinner"></div>
+    <p>CARGANDO SECTOR…</p>
+  </div>
+
+  <div id="menu" class="overlay hidden">
+    <div class="panel">
+      <h1 class="title">NEBULA<span>STRIKE</span></h1>
+      <p class="subtitle">COMBATE ESPACIAL 3D</p>
+      <div class="btn-col">
+        <button id="btn-play" class="btn primary">▶&nbsp;&nbsp;JUGAR</button>
+        <button id="btn-sfx" class="btn">SONIDO: SÍ</button>
+        <button id="btn-music" class="btn">MÚSICA: SÍ</button>
+      </div>
+      <div class="controls-hint">
+        <p>📱 <b>MÓVIL:</b> arrastra el dedo para pilotar · botones FUEGO y TURBO</p>
+        <p>🖥️ <b>PC:</b> ratón o WASD/flechas · ESPACIO dispara · SHIFT turbo</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="gameover" class="overlay hidden">
+    <div class="panel">
+      <h2 class="title small">NAVE DESTRUIDA</h2>
+      <p id="go-score" class="final-score">0</p>
+      <p id="go-best" class="final-best">RÉCORD: 0</p>
+      <div class="btn-col">
+        <button id="btn-retry" class="btn primary">↻&nbsp;&nbsp;REINTENTAR</button>
+        <button id="btn-menu" class="btn">MENÚ PRINCIPAL</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="paused" class="overlay hidden">
+    <div class="panel">
+      <h2 class="title small">PAUSA</h2>
+      <div class="btn-col">
+        <button id="btn-resume" class="btn primary">▶&nbsp;&nbsp;SEGUIR</button>
+        <button id="btn-pause-sfx" class="btn">SONIDO: SÍ</button>
+        <button id="btn-pause-music" class="btn">MÚSICA: SÍ</button>
+        <button id="btn-quit" class="btn">SALIR AL MENÚ</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

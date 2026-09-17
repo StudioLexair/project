@@ -1,0 +1,12 @@
+# Credenciales y configuración local
+.env
+.env.*
+!.env.example
+
+# Vercel local metadata
+.vercel
+
+# Dependencies and generated files
+node_modules/
+npm-debug.log*
+.DS_Store

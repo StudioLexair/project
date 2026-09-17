@@ -1,0 +1,30 @@
+name: Desplegar Nebula Strike en Vercel
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nebula-strike-vercel-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Despliegue de producción
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Descargar el proyecto
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Desplegar en Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: npx --yes vercel@59.20.0 deploy --prod --yes --token "$VERCEL_TOKEN" --name nebula-strike-3d

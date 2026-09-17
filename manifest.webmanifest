@@ -1,0 +1,27 @@
+{
+  "name": "Nebula Strike 3D",
+  "short_name": "Nebula Strike",
+  "description": "Combate espacial 3D: pilota tu nave, esquiva asteroides y destruye la flota enemiga.",
+  "id": "nebula-strike-3d",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#04060f",
+  "theme_color": "#0a1030",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "assets/icons/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
